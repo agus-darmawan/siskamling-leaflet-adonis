@@ -6,27 +6,10 @@ import vine, { SimpleMessagesProvider } from '@vinejs/vine';
 import db from '@adonisjs/lucid/services/db'
 
 export default class ReportsController {
-  public async index({ request, response }: HttpContext) {
+  public async index({ response }: HttpContext) {
     try {
-      const { page = 1, limit = 10, search = '', status = '' } = request.qs();
-
-      const query = Report.query();
-
-      if (search) {
-        query.where((builder) => {
-          builder.where('name', 'like', `%${search}%`)
-                 .orWhere('type', 'like', `%${search}%`)
-                 .orWhere('location', 'like', `%${search}%`);
-        });
-      }
-
-      if (status) {
-        query.where('status', status);
-      }
-
-      const reports = await query.paginate(page, limit);
-
-      return responseUtil.success(response, reports, 'Reports retrieved successfully');
+      const data = await Report.all()
+      return responseUtil.success(response, data, 'Reports retrieved successfully');
     } catch (error) {
       return response.status(500).json({
         status: 'error',
