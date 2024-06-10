@@ -19,6 +19,30 @@ export default class ReportsController {
     }
   }
 
+  
+  public async indexMeta({ response }: HttpContext) {
+    try {
+      const data = await Report.query().select('id', 'date', 'type', 'status', 'lat', 'long');
+
+      const formattedData = data.map(report => ({
+        id: report.id,
+        date: report.date,
+        type: report.type,
+        status: report.status,
+        coordinates: [parseFloat(report.lat), parseFloat(report.long)],
+      }));
+
+  
+      return responseUtil.success(response, formattedData, 'Reports retrieved successfully');
+    } catch (error) {
+      return response.status(500).json({
+        status: 'error',
+        message: 'Failed to retrieve reports',
+        error: error.message,
+      });
+    }
+  }
+
   public async store({ request, response }: HttpContext) {
     const schema = vine.object({
       name: vine.string().trim(),
@@ -49,13 +73,14 @@ export default class ReportsController {
         location: data.location,
         description: data.description,
       });
-
+  
       return responseUtil.created(response, report, 'Report created successfully');
     } catch (error) {
       console.error(error);
       return response.badRequest(error.messages || 'Failed to create report');
     }
   }
+
 
   public async updateStatus({ params, request, response }: HttpContext) {
     const schema = vine.object({
