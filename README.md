@@ -15,7 +15,7 @@
 
 ## Features
 
--   Login
+-   Loginn
 -   Registration
 -   Email verification
 -   Middleware for email verified users only
