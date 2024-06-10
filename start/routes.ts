@@ -3,6 +3,7 @@ import { HttpContext } from '@adonisjs/core/http'
 
 import { middleware } from './kernel.js'
 import authRoutes from './routes/v1/auth.js'
+import reportsRoutes from './routes/v1/report.js'
 
 
 
@@ -15,6 +16,7 @@ router.get('/', async ({ response }: HttpContext) => {
   
 router.group(() => {
   authRoutes()
+  reportsRoutes()
   router.group(() => {
     router.group(() => {
     }).middleware(middleware.verifiedEmail())
