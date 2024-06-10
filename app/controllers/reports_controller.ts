@@ -103,36 +103,46 @@ export default class ReportsController {
 
   public async getStats({ response }: HttpContext) {
     try {
-      const statuses = ['terlapor', 'tertangani', 'dalam penanganan', 'belum tertangani'];
-  
-      // Fetch counts for each status
-      const statusCountsPromises = statuses.map(async (status) => {
-        const count = await db.from('reports').where('status', status).count('* as total');
-        return { status, count: count[0].total };
-      });
-      const statusCounts = await Promise.all(statusCountsPromises);
-  
-      // Fetch monthly statistics
-      const monthlyStats = await db
-        .from('reports')
-        .select(db.raw('EXTRACT(MONTH FROM date) as month'))
-        .count('* as count')
-        .groupByRaw('EXTRACT(MONTH FROM date)')
-        .orderByRaw('EXTRACT(MONTH FROM date)');
-  
-      // Success response
-      return response.status(200).json({
-        status: 'success',
-        data: { statusCounts, monthlyStats },
-        message: 'Statistics retrieved successfully',
-      });
+        const statuses = ['terlapor', 'tertangani', 'dalam penanganan', 'belum tertangani'];
+
+        // Fetch counts for each status
+        const statusCountsPromises = statuses.map(async (status) => {
+            const count = await db.from('reports').where('status', status).count('* as total');
+            return { status, count: count[0].total };
+        });
+        const statusCounts = await Promise.all(statusCountsPromises);
+
+        // Fetch yearly and monthly statistics
+        const yearlyMonthlyStats = await db
+            .from('reports')
+            .select(db.raw('EXTRACT(YEAR FROM date) as year'), db.raw('EXTRACT(MONTH FROM date) as month'))
+            .count('* as count')
+            .groupByRaw('EXTRACT(YEAR FROM date), EXTRACT(MONTH FROM date)')
+            .orderByRaw('EXTRACT(YEAR FROM date), EXTRACT(MONTH FROM date)');
+
+        // Organize the results by year and month
+        const organizedStats = yearlyMonthlyStats.reduce((acc, { year, month, count }) => {
+            if (!acc[year]) {
+                acc[year] = [];
+            }
+            acc[year].push({ month, count });
+            return acc;
+        }, {});
+
+        // Success response
+        return response.status(200).json({
+            status: 'success',
+            data: { statusCounts, organizedStats },
+            message: 'Statistics retrieved successfully',
+        });
     } catch (error) {
-      console.error(error);
-      return response.status(500).json({
-        status: 'error',
-        message: 'Failed to retrieve statistics',
-        error: error.message,
-      });
+        console.error(error);
+        return response.status(500).json({
+            status: 'error',
+            message: 'Failed to retrieve statistics',
+            error: error.message,
+        });
     }
-  }
+}
+
 }
