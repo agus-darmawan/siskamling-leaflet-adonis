@@ -8,5 +8,6 @@ export default function reportsRoutes(){
         router.get('/stats', [ReportsController, 'getStats'])
         router.post('/', [ReportsController,'store'])
         router.patch('/:id', [ReportsController, 'updateStatus'])
+        router.delete('/:id', [ReportsController, 'destroy'])
     }).prefix('/reports')
 }

@@ -69,7 +69,7 @@ export default class ReportsController {
         phone: data.phone,
         lat: data.lat,
         long: data.long,
-        status: 'terlapor',
+        status: 'belum tertangani',
         location: data.location,
         description: data.description,
       });
@@ -111,7 +111,7 @@ export default class ReportsController {
 
   public async getStats({ response }: HttpContext) {
     try {
-        const statuses = ['terlapor', 'tertangani', 'dalam penanganan', 'belum tertangani'];
+        const statuses = ['tertangani', 'dalam penanganan', 'belum tertangani'];
 
         // Fetch counts for each status
         const statusCountsPromises = statuses.map(async (status) => {
@@ -119,6 +119,10 @@ export default class ReportsController {
             return { status, count: count[0].total };
         });
         const statusCounts = await Promise.all(statusCountsPromises);
+
+        // Calculate the total count for 'terlapor'
+        const totalReportsCount = await db.from('reports').count('* as total');
+        statusCounts.push({ status: 'terlapor', count: totalReportsCount[0].total });
 
         // Fetch yearly and monthly statistics
         const yearlyMonthlyStats = await db
@@ -151,6 +155,16 @@ export default class ReportsController {
             error: error.message,
         });
     }
+  }
+  async destroy({ params, response }: HttpContext) {
+    const report = await Report.find(params.id)
+    if (!report) {
+        return responseUtil.notFound(response)
+    }
+
+    await report.delete()
+    return responseUtil.noContent(response)
 }
+
 
 }
